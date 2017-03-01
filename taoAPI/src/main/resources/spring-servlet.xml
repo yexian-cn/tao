@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:aop="http://www.springframework.org/schema/aop" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+		http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+		http://www.springframework.org/schema/context 
+		http://www.springframework.org/schema/context/spring-context-3.0.xsd
+		http://www.springframework.org/schema/mvc 
+		http://www.springframework.org/schema/mvc/spring-mvc-3.0.xsd
+		http://www.springframework.org/schema/aop
+		http://www.springframework.org/schema/aop/spring-aop.xsd">
+	<!-- -->
+	<bean id="propertyConfigurer"
+		class="com.xiaochun.tao.common.congif.PropertyPlaceholderConfigurer"
+		lazy-init="false">
+		<property name="locations">
+			<list>
+				<value>classpath:api.properties</value>
+				<value>classpath:server.properties</value>
+			</list>
+		</property>
+		<property name="ignoreResourceNotFound" value="true" />
+		<property name="ignoreUnresolvablePlaceholders" value="true" />
+	</bean>
+
+	<!-- spring mvc -->
+	<!-- web mvc configuration -->
+	<!-- 扫描web包，应用Spring的注解 @Controller -->
+	<mvc:annotation-driven />
+	<context:component-scan base-package="com.xiaochun.tao.*" />
+     
+     <!-- 跳转JSP的前缀和后缀配置-->  
+    <bean id="viewResolver" class="org.springframework.web.servlet.view.InternalResourceViewResolver">  
+        <property name="prefix" value="/WEB-INF/view/" />  
+        <property name="suffix" value=".jsp" />  
+    </bean>
+     
+    <bean id="messageSource" class="org.springframework.context.support.ResourceBundleMessageSource"
+        p:basename="i18n/messages" />
+         
+	<!-- MVC Annotation Driven -->
+	<bean
+		class="org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter">
+	 	<property name="messageConverters">
+			<list>
+				<bean id="utf8StringHttpMessageConverter"
+					class="org.springframework.http.converter.StringHttpMessageConverter">
+					<property name="supportedMediaTypes">
+						<list>
+							<value>text/plain;charset=UTF-8</value>
+						</list>
+					</property>
+				</bean>
+				<bean id="mappingJacksonHttpMessageConverter"
+					class="org.springframework.http.converter.json.MappingJackson2HttpMessageConverter">
+					<property name="supportedMediaTypes">
+						<list>
+							<value>text/html;charset=UTF-8</value>
+						</list>
+					</property>
+				</bean>
+			</list>
+		</property>
+	</bean>
+
+	<bean id="exceptionResolver"
+		class="org.springframework.web.servlet.handler.SimpleMappingExceptionResolver">
+		<property name="exceptionMappings">
+			<props>
+				<prop key="com.xiaochun.airticket.common.exception.ServiceRuntimeException">ServiceRuntimeException</prop>
+				<prop key="com.xiaochun.airticket.common.exception.ServiceException">ServiceException</prop>
+			</props>
+		</property>
+	</bean>
+	<bean id="multipartResolver"
+		class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+		<property name="maxUploadSize" value="1024000000"></property>
+	</bean>
+	<bean id="springMethodInterceptor"
+		class="com.xiaochun.tao.api.interceptor.MethodAuthorityInterceptor"></bean>
+	<aop:config>
+		<!--切入点 -->
+		<aop:pointcut id="webController"
+			expression="execution(public * com.xiaochun.tao.api.controller.*.*(..))" />
+		<!--在该切入点使用自定义拦截器 -->
+		<aop:advisor pointcut-ref="webController" advice-ref="springMethodInterceptor" />
+	</aop:config>
+</beans> 
